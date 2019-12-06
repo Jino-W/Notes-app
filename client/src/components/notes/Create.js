@@ -1,35 +1,25 @@
 import React from 'react'
-import axios from '../../config/axios'
 import Form from './Form'
+import {connect} from 'react-redux'
+import "../../bootstrap.css"
+import {startCreateNote} from '../../actions/notes'
 
 class noteCreate extends React.Component{
 
     submitHandle=(formData)=>{
-        axios.post(`/notes`, formData, {
-            headers:{
-                "x-auth" : localStorage.getItem("authToken")
-            }
-        })
-        .then(response=>{
-            if(response.data.hasOwnProperty('errors')){
-                alert(response.data.message)
-            }else{
-                this.props.history.push(`/notes`)
-            }
-        })
-        .catch(err=>{
-            alert(err)
-        })
+        this.props.dispatch(startCreateNote(formData))
+        this.props.cancelHandle()
     }
 
     render(){
         return(
-            <div>
-                <h2>Edit Note</h2>
+            <div style={{color: "black"}}>
+                <a href='# ' className="row justify-content-end mr-2"><i className="fas fa-times-circle" onClick={()=>this.props.cancelHandle()}></i></a>
+                <h4 className="text-center">Create Notes</h4>
                 <Form submitHandle={this.submitHandle}/>
             </div>
-        )g
+        )
     }
 }
 
-export default noteCreate
+export default connect()(noteCreate)

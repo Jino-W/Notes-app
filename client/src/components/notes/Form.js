@@ -1,5 +1,6 @@
 import React from "react"
 import axios from '../../config/axios'
+import "../../bootstrap.css"
 
 class Form extends React.Component{
     constructor(props){
@@ -14,9 +15,11 @@ class Form extends React.Component{
     }
 
     handleChange=(e)=>{
-        this.setState({
-            [e.target.name] : e.target.value
-        })
+        if(e.target.value !=="---select category---"){
+            this.setState({
+                [e.target.name] : e.target.value
+            })
+        }
     }
 
     handleSubmit=(e)=>{
@@ -24,6 +27,7 @@ class Form extends React.Component{
         const item = this.state.categories.find(category=>{
             return category.name === this.state.category
         })
+        console.log("i",item)
         const formData = {
             title: this.state.title,
             description: this.state.description,
@@ -51,26 +55,33 @@ class Form extends React.Component{
 
 
     render(){
-        console.log(this.state.note)
         return(
-            <div>
-                <form onSubmit={this.handleSubmit}>
-                    <label>Title: &nbsp;
-                        <input type="text" name="title" value={this.state.title} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <label>Description: &nbsp;
-                        <input type="textarea" name="description" value={this.state.description} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <label>Category: &nbsp;
-                        <select value={this.state.category} name="category" onChange={this.handleChange}>
+            <div style={{color: "black"}}>
+                <form className="mt-3" onSubmit={this.handleSubmit}>
+                    <div className="form-group">
+                        <label className="sr-only"  htmlFor="title">Title: </label>
+                        <input id="title" placeholder="Name" className="form-control input-sm" type="text" name="title" value={this.state.title} onChange={this.handleChange} />
+                    </div>
+
+                    <div className="form-group">
+                        <label  className="sr-only" htmlFor="category">Category: </label>
+                        <select  id="category" value={this.state.category}  className="form-control input-sm" name="category" onChange={this.handleChange}>
+                            <option key="---select category---" name="category" value ="---select category---" >---select category---</option>
+
                             {this.state.categories.map(category=>{
                                 return (
                                     <option key={category._id} name="category" value = {category.name}>{category.name}</option>
                                 )
                             })}
                         </select>
-                    </label><br/><br/>
-                    <input type="submit" />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="sr-only"  htmlFor="description">Description: </label>
+                        <textarea id="description"  placeholder="Write the Note description..." className="form-control input-sm" type="textarea" name="description" value={this.state.description} onChange={this.handleChange} />
+                    </div>
+                    
+                    <input type="submit"  className="btn btn-primary btn-block justify-content-center"  />
                 </form>
             </div>
         )

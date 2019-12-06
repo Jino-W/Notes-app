@@ -1,62 +1,48 @@
 import React from 'react'
-import axios from '../../config/axios'
-import {Link,Redirect} from 'react-router-dom'
+import {Link} from 'react-router-dom'
+import { startDeleteNote } from '../../actions/notes'
+import {startShowNote} from "../../actions/note"
+import {connect} from "react-redux"
 
 class Show extends React.Component{
-    constructor(props){
-        super(props)
-        this.state={
-            note : props.location.state.note,
-            redirectToReferrer: false
-        }
-    }
-
-    handleBack=()=>{
-        this.setState({redirectToReferrer:true})
-    }
 
     deleteHandle=(id)=>{
-        axios.delete(`/notes/${id}`,{
-            headers:{
-                "x-auth" : localStorage.getItem('authToken')
-            }
-        })
-        .then(response=>{
-            console.log("delete",response.data)
-            this.props.history.push('/notes')
-            window.location.reload()
+        this.props.dispatch(startDeleteNote(id, this.props))
+    }
 
-        })
-        .catch(err=>{
-            alert(err)
-        })
+    componentDidMount(){
+        const id=this.props.match.params.id
+        this.props.dispatch(startShowNote(id, this.props))
     }
 
     render(){
-        console.log(this.state.note)
-        const {_id,title,description,categoryId} = this.state.note
         return(
-            <div>
+            <React.Fragment>
+                {this.props.note &&
                 <div>
-                    <h2>Contact Information</h2>
-                    <p><strong>Id:</strong> {_id}</p>
-                    <p><strong>Name:</strong> {title}</p>
-                    <p><strong>Email:</strong> {description}</p>
-                    <p><strong>Category:</strong> {categoryId.name}</p>
-                </div>
-                <div>
-                    <Link to={`/notes`} onClick={()=>{this.deleteHandle(_id)}}>Delete</Link> | 
-                    <Link to= {{ pathname: `/notes/1/${_id}` , state: {note: this.state.note} }}>Edit</Link>
-                    <br/><br/>
-                
-                    <button onClick = {this.handleBack}>Back</button>
-                    {this.state.redirectToReferrer && <Redirect to={`/notes`} />}
-                </div>
-            </div>
+                    <div>
+                        <h2>Contact Information</h2>
+                        <p><strong>Id:</strong> {this.props.note._id}</p>
+                        <p><strong>Name:</strong> {this.props.note.title}</p>
+                        <p><strong>Description:</strong> {this.props.note.description}</p>
+                        {this.props.note.categoryId && <p><strong>Category:</strong> {this.props.note.categoryId.name}</p>}
+                    </div>
+                    <div>
+                        <Link to={`/notes`} onClick={()=>{this.deleteHandle(this.props.note._id)}}>Delete</Link> | 
+                        <Link to= {{ pathname: `/notes/1/${this.props.note._id}`}}>Edit</Link> | 
+                        <Link to= {{ pathname: `/notes`}}>Back</Link>
+                    </div>
+                </div>}
+            </React.Fragment>
         )
     }
 }
 
+const mapStateToProps=(state, props)=>{
+    return {
+        note: state.notes.find(note => note._id === props.match.params.id) || state.note
+    }
+}
 
-export default Show
+export default connect(mapStateToProps)(Show)
 

@@ -17,6 +17,10 @@ const noteSchema = new Schema({
         required: true,
         ref: 'Category'
     },
+    color:{
+        type:String,
+        default: "#555555"
+    },
     user:{
         type: Schema.Types.ObjectId,
         required: true,

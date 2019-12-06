@@ -18,7 +18,8 @@ module.exports.create = (req,res)=>{
     const body = req.body  
     const note = new Note(body) 
     note.user = req.user._id
-    note.save()    
+    note.populate("categoryId").execPopulate()
+    note.save()  
         .then((note)=>{
             res.json(note)  
         })
@@ -70,7 +71,7 @@ module.exports.destroy = (req,res)=>{
 module.exports.update = (req,res)=>{
     const id = req.params.id
     const body = req.body
-    Note.findOneAndUpdate({_id: id, user:req.user._id}, body, {new:true, runValidators : true})
+    Note.findOneAndUpdate({_id: id, user:req.user._id}, body, {new:true, runValidators : true}).populate('categoryId') 
         .then((note)=>{
             if(note){
                 res.json(note)

@@ -1,6 +1,16 @@
 import React from "react"
-import axios from '../../config/axios'
+import {connect} from 'react-redux'
+import {startUserRegister} from '../../actions/user'
+import {Link} from "react-router-dom"
 
+const validEmailRegex = new RegExp(/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i);
+const validPasswordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{5,})/i);
+
+const validateForm = (errors) => {
+    let valid = true;
+    Object.values(errors).forEach((val) => val.length > 0 && (valid = false));
+    return valid;
+}
 class Register extends React.Component{
     constructor(){
         super()
@@ -8,14 +18,40 @@ class Register extends React.Component{
             username:'',
             email:'',
             mobile:'',
-            password:''
+            password:'',
+            errors: {
+                username: '',
+                email: '',
+                mobile:'',
+                password: '',
+            }
         }
     }
 
 
     handleChange=(e)=>{
-        this.setState({
-            [e.target.name] : e.target.value
+        e.preventDefault()
+        const { name, value } = e.target;
+        let errors = this.state.errors;
+        switch (name) {
+            case 'username': 
+              errors.username = value.length < 5 ? 'Full Name must be 5 characters long!': '';
+              break;
+            case 'email': 
+              errors.email = validEmailRegex.test(value) ? '': 'Email is not valid!';
+              break;
+            case 'mobile': 
+              errors.mobile = value.length == 10 && Number(value) === +value ? '' : 'Invalid mobile number format';
+              break;
+            case 'password': 
+              errors.password = validPasswordRegex.test(value) ?  '' : 'Weak password!';
+              break;
+            default:
+              break;
+        }
+
+        this.setState({errors, [name]: value}, ()=> {
+            console.log(errors)
         })
     }
 
@@ -28,45 +64,53 @@ class Register extends React.Component{
             password:this.state.password
         }
 
-        console.log(formData)
-
-        this.setState({
-            username:'',
-            email:'',
-            mobile:'',
-            password:''
-        })
-        axios.post('/users/register', formData)
-            .then(response=>{
-                console.log(response.data)
-                this.props.history.push('/')
+        if(validateForm(this.state.errors)) {
+            this.props.dispatch(startUserRegister(formData,this.props))
+            this.setState({
+                username:'',
+                email:'',
+                mobile:'',
+                password:''
             })
-            .catch(err=>{
-                alert(err)
-            })
-
+        }else{
+            alert('Invalid Form')
+        }
     }
-
 
     render(){
         return(
-            <div>
-                <h2>Register Page</h2>
-                <form onSubmit={this.handleSubmit}>
-                    <label>Name: &nbsp;
-                        <input type="text" name="username" value={this.state.username} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <label>Email: &nbsp;
-                        <input type="text" name="email" value={this.state.email} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <label>Mobile :&nbsp;
-                        <input type="text" name="mobile" value={this.state.mobile} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <label>Password :&nbsp;
-                        <input type="password" name="password" value={this.state.password} onChange={this.handleChange} />
-                    </label><br/><br/>
-                    <input type="submit" />
-                </form>
+            <div class="container" style={{color: "black"}}>
+                <div class="row">
+                    <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+                        <div class="card card-signin my-5">
+                            <div class="card-body">
+                                <h5 class="card-title text-center">SignUp</h5>
+                                <form id="form-style" className="justify-content-center" onSubmit={this.handleSubmit}>
+                                    <div className="form-group">
+                                        <label className="sr-only" >Name: </label>
+                                        <input placeholder="Jino" className="form-control" type="text" name="username" value={this.state.username} onChange={this.handleChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="sr-only" >Email: </label>
+                                        <input placeholder="jinoesther@gmail.com" className="form-control" type="text" name="email" value={this.state.email} onChange={this.handleChange} />
+                                    </div>
+                                    <div className="form-group">
+                                    <label className="sr-only" >Mobile : </label>
+                                        <input placeholder="9087654321" className="form-control" type="text" name="mobile" value={this.state.mobile} onChange={this.handleChange} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="sr-only" >Password : </label>
+                                        <input placeholder="Jino@811*" className="form-control" type="password" name="password" value={this.state.password} onChange={this.handleChange} />
+                                    </div>
+                                    <div>
+                                        <Link className="float-left" to='/users/login'><ins>Login account</ins></Link>
+                                        <input type="submit"  className="btn" className="btn btn-primary btn-sm float-right"/>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         )
     }
@@ -74,4 +118,4 @@ class Register extends React.Component{
 
 
 
-export default Register;
+export default connect()(Register);

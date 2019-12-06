@@ -1,22 +1,20 @@
 import React from 'react'
-import axios from '../../config/axios'
-import {Link, Redirect} from 'react-router-dom'
+import {connect} from 'react-redux'
+import {Link} from 'react-router-dom'
+import { startEditCategory, startDeleteCategory } from '../../actions/categories'
+import { startShowCategory } from '../../actions/category'
 
-class List extends React.Component{
+
+class Show extends React.Component{
     constructor(props){
         super(props)
         this.state = {
-            category: props.location.state.category,
-            name:"" || props.location.state.category.name,
+            name: props.category ? props.category.name :"",
             isEdit: false,
-            redirectToReferrer: false
-
         }
+        props.category && console.log(props.category.name)
     }
 
-    handleBack=()=>{
-        this.setState({redirectToReferrer:true})
-    }
 
     handleChange=(e)=>{
         this.setState({
@@ -25,67 +23,58 @@ class List extends React.Component{
     }
 
     deleteHandle=(id)=>{
-        axios.delete(`/categories/${id}`,{
-            headers:{
-                "x-auth" : localStorage.getItem('authToken')
-            }
-        })
-        .then(response=>{
-            console.log("delete",response.data)
-            this.props.history.push('/categories')
-            window.location.reload()
-        })
-        .catch(err=>{
-            alert(err)
-        })
+        this.props.dispatch(startDeleteCategory(id, this.props))
     }
 
     submitHandle=()=>{
-        const id = this.props.match.params.id        
-        axios.put(`/categories/${id}`, {name: this.state.name}, {
-            headers:{
-                "x-auth": localStorage.getItem('authToken')
-            }
-        })
-        .then(response=>{
-            console.log(response.data)
-            this.setState({isEdit:false,category:response.data})
-        })
-        .catch(err=>{
-            alert(err)
-        })
+        this.props.dispatch(startEditCategory(this.props.match.params.id, {"name": this.state.name}, this.props))
+        this.setState({isEdit:false})
     }
 
     editHandle=()=>{
-        this.setState({isEdit:true})
+        this.setState(prevState=>{
+            return {isEdit: !prevState.isEdit}
+        })
+    }
+
+    componentDidMount(){
+        const id=this.props.match.params.id
+        this.props.dispatch(startShowCategory(id, this.props))
     }
     
     
     render(){
-        console.log("category",this.state.category)
+        console.log("category",this.props.category)
         return(
             <div>
-                <h2>Category</h2>
-                <p>Name: {this.state.category.name}</p>
-                <Link to={`/categories`} onClick={()=>{this.deleteHandle(this.state.category._id)}}>Delete</Link> | 
-                <Link to={{ state:{category:this.state.category} }} onClick={this.editHandle}>Edit</Link> 
+                {this.props.category && <div>
+                    <h2>Category</h2>
+                    <p>Name: {this.props.category.name}</p>
+                    <Link to={`/categories`} onClick={()=>{this.deleteHandle(this.props.category._id)}}>Delete</Link> | 
+                    <Link to="#" onClick={this.editHandle}>Edit</Link> |
+                    <Link to= {{ pathname: `/notes`}}>Back</Link>
 
-                <br/><br/>
-                
-                <button onClick = {this.handleBack}>Back</button>
-                {this.state.redirectToReferrer && <Redirect to="/categories" />}
-
-                <br/><br/>
-                              
-                {this.state.isEdit &&
-                    <div>
-                        <input type= "text" name="name" value={this.state.name} placeholder="Enter category name" onChange={this.handleChange} />&nbsp;
-                        <button onClick={this.submitHandle} >click ok!</button>
-                    </div>
-                }
+                    <br/><br/>
+                                
+                    {this.state.isEdit &&
+                        <div>
+                            <input type= "text" name="name" value={this.state.name} placeholder="Enter category name" onChange={this.handleChange} />&nbsp;
+                            <button onClick={this.submitHandle} >click ok!</button>
+                            <br/><br/>
+                            <Link to="#" onClick={this.editHandle}>Back</Link>
+                        </div>
+                    }
+                </div>}
             </div>
         )
     }
 }
 
-export default List
+
+const mapStateToProps=(state, props)=>{
+    return {
+        category: state.categories.find(category=> category._id == props.match.params.id) || state.category
+    }
+}
+
+export default connect(mapStateToProps)(Show)
